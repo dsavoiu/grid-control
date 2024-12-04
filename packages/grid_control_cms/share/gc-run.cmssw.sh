@@ -153,7 +153,7 @@ if [ "$GC_CMSSWRUN_RETCODE" == "0" ] && [ -n "$CMSSW_CONFIG" ]; then
 			echo "---------------------------"
 			cat "$DBSDIR/hash"
 			echo "Executing python $CFG_BASENAME (modified for edmConfigHash) ..."
-			python "$CFG_BASENAME" 2>&1
+			python3 "$CFG_BASENAME" 2>&1
 			echo "---------------------------"
 			CODE=113
 			break
@@ -163,7 +163,7 @@ if [ "$GC_CMSSWRUN_RETCODE" == "0" ] && [ -n "$CMSSW_CONFIG" ]; then
 		cp "$DBSDIR/config" "$CFG_BASENAME"
 		if [ "$GZIP_OUT" = "yes" ]; then
 			(
-				echo "Starting cmsRun with config file $CFG_NAME and arguments $@"
+				echo "Starting cmsRun with config file $CFG_BASENAME and arguments $@"
 				cmsRun -j "$DBSDIR/report.xml" -e "$CFG_BASENAME" $@
 				echo $? > "$GC_LANDINGZONE/exitcode.txt"
 				echo
@@ -172,6 +172,7 @@ if [ "$GC_CMSSWRUN_RETCODE" == "0" ] && [ -n "$CMSSW_CONFIG" ]; then
 			) 2>&1 | gzip -9 > "$CFG_BASENAME.rawlog.gz"
 			[ -f "$GC_LANDINGZONE/exitcode.txt" ] && CODE=$(< "$GC_LANDINGZONE/exitcode.txt") && rm -f "$GC_LANDINGZONE/exitcode.txt"
 		else
+			echo "Starting cmsRun with config file $CFG_BASENAME and arguments $@"
 			cmsRun -j "$DBSDIR/report.xml" -e "$CFG_BASENAME" $@
 			CODE=$?
 		fi
