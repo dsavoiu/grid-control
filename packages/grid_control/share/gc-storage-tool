@@ -534,8 +534,8 @@ sc_copy()
 					sc_try_copy sc_call "dccp" "$1" "$2" || \
 					sc_fail "local_dcap_copy_failed";;
 				"eos://"* | "root://"*)
-					sc_try_copy sc_call "xrdcp" "${1#file://}" "root://${2#eos://}" || \
-					sc_try_copy sc_call "gfal-copy" "$GFAL_COPY_ARGS" "$1" "root://${2#eos://}" || \
+					sc_try_copy sc_call "xrdcp" "${1#file://}" "root://${2#*://}" || \
+					sc_try_copy sc_call "gfal-copy" "$GFAL_COPY_ARGS" "$1" "root://${2#*://}" || \
 					sc_fail "local_eos_copy_failed";;
 				"ftp://"* | "ftps://")
 					sc_try_copy sc_call "curl" --upload-file "${1#file://}" --ssl "$2" || \
@@ -672,9 +672,9 @@ sc_mkdir() # Create directory on storage element - ignore existing dirs and crea
 		"dcap://"* | "gsidcap://"*)
 			sc_call "gfal-mkdir" -p "$1" || \
 			sc_fail "dcap_mkdir_failed";;
-		"eos://"*)
+		"eos://"* | "root://"*)
 			sc_call_eos "$1" mkdir -p || \
-			sc_call_xrdfs "${1#eos://}" mkdir -p || \
+			sc_call_xrdfs "${1#*://}" mkdir -p || \
 			sc_fail "eos_mkdir_failed";;
 		"file://"* | "/"*)
 			sc_call "mkdir" -p "${1#file://}" || \
@@ -718,6 +718,10 @@ sc_mkdir() # Create directory on storage element - ignore existing dirs and crea
 			sc_call "srmmkdir" -2 "$1" || \
 			sc_call "arcmkdir" -p "$1" || \
 			sc_fail "srm_mkdir_failed";;
+		"root://"*)
+			sc_call_xrdfs "${1#*://}" mkdir -p || \
+			sc_call "gfal-mkdir" -p "$1" || \
+			sc_fail "rfio_mkdir_failed";;
 		*)
 			sc_fail "mkdir_not_supported";;
 	esac
@@ -738,12 +742,12 @@ sc_exists() # Check existence of file on storage element
 				sc_ls "$1" > /dev/null || \
 				sc_fail "dcap_exists_failed"
 			fi;;
-		"eos://"*)
+		"eos://"* | "root://"*)
 			if sc_check_bin_exists "eos"; then
 				sc_call_eos "$1" stat || \
 				sc_fail "eos_exists_failed"
-			elif sc_check_bin_exists "eos"; then
-				sc_call_xrdfs "${1#eos://}" stat || \
+			elif sc_check_bin_exists "xrdfs"; then
+				sc_call_xrdfs "${1#*://}" stat || \
 				sc_fail "eos_exists_failed"
 			else
 				sc_ls "$1" > /dev/null || \

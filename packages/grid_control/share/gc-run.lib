@@ -443,6 +443,10 @@ url_exists() {
 	case "$1" in
 		"rfio://"*)
 			print_and_eval "`getcommand nsgetacl`" "/${1#rfio://}";;
+		"root://"*)
+			EXHST="$(printf '%s' ${1#root://} | cut -d '/' -f 1)"
+			EXURL="/$(printf '%s' ${1#root://} | cut -d '/' -f 2-)"
+			print_and_eval "`getcommand xrdfs`" "$EXHST stat $EXURL";;
 		"gsiftp://"*)
 			EXCMD="`getcommand glite-gridftp-exists edg-gridftp-exists edg-gridftp-ls lcg-ls`"
 			[ "$(basename $EXCMD)" == "lcg-ls" ] && URL="sfn://${1#gsiftp://}" || URL="$1"
@@ -573,6 +577,14 @@ url_copy_single() {
 					print_and_eval "url_copy_connector" "$1" "$2";;
 			esac;;
 
+		"root://"*)
+			case "$2" in
+				"file://"*)
+					print_and_eval "`getcommand xrdcp`" "$1 $2";;
+				*)
+					print_and_eval "url_copy_connector" "$1" "$2";;
+			esac;;
+
 		"gsiftp://"*)
 			case "$2" in
 				"gsiftp://"* | "file://"*)
@@ -608,6 +620,8 @@ url_copy_single() {
 			case "$2" in
 				"rfio://"*)
 					print_and_eval "`getcommand rfcp`" "${1#file://} ${2#rfio://}";;
+				"root://"*)
+					print_and_eval "`getcommand xrdcp`" "$1 $2";;
 				"gsiftp://"*)
 					print_and_eval "`getcommand globus-url-copy`" "$1 $2";;
 				"srm://"*)
@@ -644,7 +658,7 @@ url_copy() {
 	SOURCE_FILES=""
 	SOURCE_URL="$1"
 	case "$SOURCE_URL" in
-		"rfio://"* | "gsiftp://"* | "srm://"* | "dir://"* | "davs://"*)
+		"rfio://"* | "root://"* | "gsiftp://"* | "srm://"* | "dir://"* | "davs://"*)
 			# copy from SE
 			SOURCE_URL="`echo "$SOURCE_URL" | sed -e 's@dir://@file://@'`"
 			if [[ "$FILENAMES" == *\** ]]; then
@@ -678,7 +692,7 @@ url_copy() {
 
 	TARGET_URL="$2"
 	case "$TARGET_URL" in
-		"rfio://"* | "gsiftp://"* | "srm://"* | "dir://"* | "davs://"*)
+		"rfio://"* | "root://"* | "gsiftp://"* | "srm://"* | "dir://"* | "davs://"*)
 			# copy to SE
 			TARGET_PATTERN="${SE_OUTPUT_PATTERN:-@X@}"
 			TARGET_URL="`echo "$TARGET_URL" | sed -e 's@dir://@file://@'`"
