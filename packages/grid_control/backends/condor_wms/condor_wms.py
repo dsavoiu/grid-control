@@ -374,7 +374,7 @@ class Condor(BasicWMS):
 					script_cmd = source
 				else:
 					sb_in_fn_list.append(source)
-		if self._universe.lower() == 'docker':
+		if self._universe.lower() == 'docker' or True:
 			script_cmd = './gc-run.sh'
 			sb_in_fn_list.append(get_path_share('gc-run.sh'))
 		return (script_cmd, sb_in_fn_list)
